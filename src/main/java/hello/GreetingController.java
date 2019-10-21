@@ -3,6 +3,7 @@ package hello;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,28 +61,40 @@ public class GreetingController {
 
             //create the excution channel over the session
             ChannelExec channelExec = (ChannelExec)session.openChannel("exec");
+            
 
             // Gets an InputStream for this channel. All data arriving in as messages from the remote side can be read from this stream.
-            InputStream in = channelExec.getInputStream();
+            InputStream inOutput = channelExec.getInputStream();
+            InputStream inErr=channelExec.getErrStream();
+            
 
             // Set the command that you want to execute
             // In our case its the remote shell script
-            channelExec.setCommand("ping -c 5 google.com");
+            channelExec.setCommand(message.getName());
 
             // Execute the command
             channelExec.connect();
 
             // Read the output from the input stream we set above
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            String line;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inOutput));
+            BufferedReader readerErr=new BufferedReader(new InputStreamReader(inErr));
+            String line="";
+            String err="";
             
             //Read each line from the buffered reader and add it to result list
             // You can also simple print the result here 
-            while ((line = reader.readLine()) != null)
+            while ((line = reader.readLine()) != null || (err=readerErr.readLine())!=null)
             {
-           	 System.out.println(line);
-           	 //out.write(line.getBytes());
-           	this.template.convertAndSend("/topic/greetings", new Greeting(line.toString()));
+           	 
+           	 if(err!=null && err!="") {
+           		 System.out.println(err);
+           	 this.template.convertAndSend("/topic/greetings",new Greeting(err.toString()));
+           	 }
+           	 
+           	 if(line!=null && line!="") {
+           		System.out.println(line);
+           		 this.template.convertAndSend("/topic/greetings", new Greeting(line.toString()));
+           	 }
            	 //out.flush();
                 result.add(line);
                 try {

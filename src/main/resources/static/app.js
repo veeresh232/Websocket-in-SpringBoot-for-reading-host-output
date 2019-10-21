@@ -34,6 +34,11 @@ function disconnect() {
 }
 
 function sendName() {
+	
+	if($("#name").val() =="clear"){
+		$("#greetings").html("");
+		return;
+	}
     stompClient.send("/app/hello", {}, JSON.stringify({'name': $("#name").val()}));
 }
 
@@ -47,6 +52,6 @@ $(function () {
     });
     $( "#connect" ).click(function() { connect(); });
     $( "#disconnect" ).click(function() { disconnect(); });
-    $( "#send" ).click(function() { sendName(); });
+    $( "#send" ).click(function() { sendName();	});
 });
 
